@@ -105,6 +105,10 @@ This hits the real EIA API (tens of seconds), checks **two different plants** fo
 
 Issues and PRs welcome. Run **`pytest`**, **`ruff check src tests`**, and (if you touch EIA calls) **`python scripts/smoke_eia.py`** with your key before submitting.
 
+## Related
+
+**[Project Burnout](https://github.com/abrose1/ProjectBurnout)** — a separate **web dashboard** (Burnout / Stranded Assets) that explores US fossil plants using EIA-backed data and its own hosted stack. It is a different product from this MCP server: no shared install, and this repo’s tools are for **live EIA API** access from MCP clients, not the Burnout app UI.
+
 ## Releases
 
 See [CHANGELOG.md](CHANGELOG.md) and [tags](https://github.com/abrose1/mcp-server-eia/tags) on GitHub.
