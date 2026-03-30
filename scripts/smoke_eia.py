@@ -36,6 +36,8 @@ def _assert_data(name: str, r: dict, *, min_count: int = 1) -> None:
 def main() -> None:
     _require_key()
 
+    from mcp_server_eia.tools.electricity import get_capacity_by_fuel_impl, get_generation_mix_impl
+    from mcp_server_eia.tools.fuel_prices import get_fuel_prices_impl
     from mcp_server_eia.tools.plants import (
         get_plant_operations_impl,
         get_plant_profile_impl,
@@ -119,6 +121,44 @@ def main() -> None:
         end_year=2022,
     )
     _assert_data("get_state_co2_emissions", r_co2, min_count=1)
+
+    print("get_generation_mix (US annual) …")
+    r_mix = get_generation_mix_impl(state=None, year=2023, frequency="annual")
+    _assert_data("get_generation_mix", r_mix, min_count=4)
+
+    print("get_capacity_by_fuel (TX operating) …")
+    r_cap = get_capacity_by_fuel_impl(state="TX", fuel_type="all", status="operating")
+    _assert_data("get_capacity_by_fuel", r_cap, min_count=2)
+
+    print("get_fuel_prices (Henry Hub daily, short window) …")
+    r_fuel_ng = get_fuel_prices_impl(
+        fuel="natural_gas",
+        price_type="henry_hub",
+        frequency="daily",
+        start_year=2024,
+        end_year=2024,
+    )
+    _assert_data("get_fuel_prices Henry Hub", r_fuel_ng, min_count=1)
+
+    print("get_fuel_prices (coal PRB annual) …")
+    r_fuel_coal = get_fuel_prices_impl(
+        fuel="coal",
+        price_type="powder_river",
+        frequency="annual",
+        start_year=2020,
+        end_year=2022,
+    )
+    _assert_data("get_fuel_prices coal", r_fuel_coal, min_count=1)
+
+    print("get_fuel_prices (WTI monthly) …")
+    r_fuel_wti = get_fuel_prices_impl(
+        fuel="crude_oil",
+        price_type="wti",
+        frequency="monthly",
+        start_year=2023,
+        end_year=2023,
+    )
+    _assert_data("get_fuel_prices WTI", r_fuel_wti, min_count=1)
 
     print("OK — all smoke checks passed.")
 

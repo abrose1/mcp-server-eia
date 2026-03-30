@@ -114,6 +114,38 @@ class EIAClient:
             raise RuntimeError("EIA row missing period")
         return int(str(p)[:4])
 
+    def get_latest_epod_annual_year(self) -> int:
+        """Latest calendar year available for electric-power-operational-data (annual frequency)."""
+        meta_body = self.get_route_metadata("electricity/electric-power-operational-data")
+        err = meta_body.get("error")
+        if err:
+            raise RuntimeError(str(err))
+        r = meta_body.get("response") or meta_body
+        end = r.get("endPeriod")
+        if isinstance(end, str) and len(end) >= 4:
+            try:
+                return int(end[:4])
+            except ValueError:
+                pass
+        sample = self.fetch_data(
+            "electricity/electric-power-operational-data",
+            frequency="annual",
+            data_fields=["generation"],
+            facets={"location": ["US"], "sectorid": ["98"]},
+            length=1,
+            offset=0,
+            sort=[("period", "desc")],
+        )
+        if sample.get("error"):
+            raise RuntimeError(str(sample["error"]))
+        rows = (sample.get("response") or {}).get("data") or []
+        if not rows:
+            raise RuntimeError("Could not determine latest EPOD annual year")
+        p = rows[0].get("period")
+        if not p:
+            raise RuntimeError("EIA row missing period")
+        return int(str(p)[:4])
+
     def get_latest_inventory_period(self) -> str:
         meta_body = self.get_route_metadata("electricity/operating-generator-capacity")
         err = meta_body.get("error")

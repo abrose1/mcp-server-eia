@@ -138,3 +138,63 @@ def seds_co2_series_id(sector: str, fuel: str) -> str:
 
 def label_for_energy_code(code: str) -> str:
     return CODE_TO_LABEL.get(code.upper(), "other")
+
+
+# electric-power-operational-data — headline mix (non-overlapping EIA parent codes)
+# Sum of these buckets + optional "other" ≈ ALL (remainder = other / balancing).
+EPOD_HEADLINE_MIX: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("coal", ("COL",)),
+    ("natural_gas", ("NGO",)),
+    ("nuclear", ("NUC",)),
+    ("hydroelectric", ("HYC", "HPS")),
+    ("renewables", ("AOR",)),
+    ("petroleum", ("PET",)),
+)
+
+# --- Historical spot / market fuel prices (get_fuel_prices) ---
+# EIA route IDs differ from shorthand in the technical plan (`coal/market` → `coal/market-sales-price` in API v2).
+
+# Natural gas — Henry Hub spot: `natural-gas/pri/fut` (spot + contract series).
+NG_HENRY_HUB_ROUTE = "natural-gas/pri/fut"
+NG_HENRY_HUB_FACETS: dict[str, list[str]] = {
+    "process": ["PS0"],
+    "series": ["RNGWHHD"],
+    "duoarea": ["RGC"],
+    "product": ["EPG0"],
+}
+
+# Natural gas — citygate / wellhead (delivered): `natural-gas/pri/sum` (monthly + annual only).
+NG_SUM_ROUTE = "natural-gas/pri/sum"
+NG_SUM_PRODUCT = ["EPG0"]
+# U.S. aggregate citygate and wellhead (duoarea NUS).
+NG_CITYGATE_FACETS: dict[str, list[str]] = {
+    "process": ["PG1"],
+    "duoarea": ["NUS"],
+    "product": NG_SUM_PRODUCT,
+}
+NG_WELLHEAD_FACETS: dict[str, list[str]] = {
+    "process": ["FWA"],
+    "duoarea": ["NUS"],
+    "product": NG_SUM_PRODUCT,
+}
+
+# Coal — open-market price by region: `coal/market-sales-price` (annual only; dollars per short ton).
+COAL_MARKET_SALES_ROUTE = "coal/market-sales-price"
+COAL_MARKET_TYPE_OPEN = "OM"
+
+# stateRegionId codes for common basins / areas (see EIA facet `coal/market-sales-price` / `stateRegionId`).
+COAL_REGION_BY_PRICE_TYPE: dict[str, str] = {
+    "powder_river": "PRB",
+    "appalachian": "APC",
+    "appalachian_northern": "APN",
+    "appalachian_southern": "APS",
+    "illinois": "IL",
+    "illinois_basin": "INO",
+}
+
+# Petroleum spot benchmarks: `petroleum/pri/spt`.
+PETROLEUM_SPOT_ROUTE = "petroleum/pri/spt"
+PETROLEUM_SPOT_SERIES: dict[str, str] = {
+    "wti": "RWTC",
+    "brent": "RBRTE",
+}
