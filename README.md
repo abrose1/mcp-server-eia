@@ -87,25 +87,13 @@ python scripts/smoke_eia.py
 
 This hits the real EIA API (tens of seconds), checks **two different plants** for `get_plant_operations`, and exercises every tool. Use it before releases or after changing EIA integration code. CI does **not** run this by default (no shared secret).
 
+## Repository
+
+**https://github.com/abrose1/mcp-server-eia** — releases are tagged (e.g. `v0.1.0`); see [CHANGELOG.md](CHANGELOG.md).
+
 ## Related
 
 - Burnout / StrandedAssets — stranded-asset dashboard (same EIA ingestion patterns; different product).
-
-## Publish this repo on GitHub
-
-1. Create a **new public repository** on GitHub (e.g. `mcp-server-eia`) **without** adding a README or `.gitignore` (this project already has them).
-2. From this directory:
-
-   ```bash
-   git remote add origin https://github.com/YOUR_USER/mcp-server-eia.git
-   git branch -M main
-   git push -u origin main
-   git push origin v0.1.0
-   ```
-
-3. On GitHub: **Settings → General** — set the repository **description** (one line, e.g. the blockquote above) and optional **website** / topics (`mcp`, `eia`, `energy`, `python`).
-
-4. Update the compare URL in `CHANGELOG.md` for `[0.1.0]` to point at your real GitHub user/org.
 
 ## License
 

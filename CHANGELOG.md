@@ -15,4 +15,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/smoke_eia.py` for optional live API checks (requires `EIA_API_KEY`).
 - Unit tests (`pytest`) and GitHub Actions workflow for tests (no API key).
 
-<!-- After you publish on GitHub, add: [0.1.0]: https://github.com/<you>/mcp-server-eia/releases/tag/v0.1.0 -->
+[0.1.0]: https://github.com/abrose1/mcp-server-eia/releases/tag/v0.1.0
