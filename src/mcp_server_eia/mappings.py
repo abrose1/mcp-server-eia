@@ -4,6 +4,8 @@ Human-readable inputs → EIA facet codes. Core value of this MCP layer.
 
 from __future__ import annotations
 
+from typing import Any
+
 # Fuel groups for inventory search (energy_source_code on operating-generator-capacity)
 FUEL_TYPE_TO_CODES: dict[str, list[str]] = {
     "coal": ["BIT", "SUB", "LIG", "RC", "WC", "SC"],
@@ -198,3 +200,92 @@ PETROLEUM_SPOT_SERIES: dict[str, str] = {
     "wti": "RWTC",
     "brent": "RBRTE",
 }
+
+
+# --- STEO forecasts (get_steo_forecast) ---
+#
+# STEO exposes a `seriesId` facet with human-readable names. We don't want to
+# expose every single seriesId (hundreds), so we resolve only a small curated
+# set of human keys by matching keywords in EIA's `seriesName`.
+
+_STEO_SUPPORTED_SERIES: dict[str, dict[str, list[str]]] = {
+    # Keep keys stable for the LLM UX. Matching is heuristic on EIA `seriesName`.
+    "crude_oil_price": {
+        "any": ["crude oil"],
+        "prefer": ["wti", "brent", "spot", "price"],
+    },
+    "natural_gas_price": {
+        "any": ["natural gas"],
+        "prefer": ["henry", "hub", "spot", "price"],
+    },
+    "electricity_demand": {
+        # EIA STEO series names for electricity demand appear to use
+        # "Net energy for electricity load, United States" rather than
+        # the literal phrase "electricity demand".
+        "any": ["electricity load"],
+        "prefer": ["united states", "net energy"],
+    },
+}
+
+
+def _steo_match_score(name_lower: str, any_keywords: list[str], preferred: list[str]) -> float:
+    """
+    Score candidate series based on keyword overlap.
+
+    Important: preferred keywords should *only* matter if we already matched
+    at least one of the required `any_keywords`. This prevents overly broad
+    matches (e.g., any series containing "demand" being selected as "electricity_demand").
+    """
+
+    if not any(any_kw in name_lower for any_kw in any_keywords):
+        return 0.0
+
+    score = 1.0
+    for p in preferred:
+        if p in name_lower:
+            score += 0.25
+    return score
+
+
+def steo_series_id_for_key(client: Any, series_key: str) -> tuple[str, str]:
+    """
+    Resolve `series_key` (human-friendly) -> (`seriesId`, `seriesName`) for STEO.
+
+    This function calls the live EIA facet catalog to find the appropriate
+    `seriesId` for the selected subset of series keys.
+    """
+
+    k = series_key.strip().lower()
+    if k not in _STEO_SUPPORTED_SERIES:
+        supported = ", ".join(sorted(_STEO_SUPPORTED_SERIES.keys()))
+        raise ValueError(f"Unknown STEO series {series_key!r}. Use one of: {supported}.")
+
+    cfg = _STEO_SUPPORTED_SERIES[k]
+
+    facet_body = client.get("steo/facet/seriesId", params=[])
+    err = facet_body.get("error")
+    if err:
+        raise RuntimeError(str(err))
+
+    facets = (facet_body.get("response") or {}).get("facets") or []
+    candidates: list[tuple[str, str, float]] = []
+    for f in facets:
+        sid = str(f.get("id") or "").strip()
+        name = str(f.get("name") or "").strip()
+        if not sid or not name:
+            continue
+        name_lower = name.lower()
+        score = _steo_match_score(name_lower, cfg["any"], cfg["prefer"])
+        if score <= 0:
+            continue
+        candidates.append((sid, name, score))
+
+    if not candidates:
+        raise ValueError(
+            f"Could not resolve STEO seriesId for key {series_key!r}. EIA series catalog may have changed."
+        )
+
+    # Prefer the highest score; break ties deterministically by seriesId/name.
+    candidates.sort(key=lambda t: (-t[2], t[0], t[1]))
+    sid, name, _score = candidates[0]
+    return sid, name

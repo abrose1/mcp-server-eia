@@ -82,6 +82,7 @@ Then add the MCP JSON block above (or export `EIA_API_KEY` for a one-off termina
 | `get_electricity_prices` | `electricity/retail-sales` by state/sector. |
 | `get_aeo_projections` | AEO national fuel prices or regional EMM series (prices, capacity, emissions). |
 | `get_fuel_prices` | Historical spot/market fuel prices: natural gas (Henry Hub, U.S. citygate/wellhead), coal by basin (`coal/market-sales-price`), crude WTI/Brent (`petroleum/pri/spt`). Not the same as AEO `category=fuel_prices`. |
+| `get_steo_forecast` | STEO (Short-Term Energy Outlook) 18-month forecasts with historical actuals (monthly or quarterly). |
 | `get_state_co2_emissions` | SEDS state CO2 (million metric tons) by sector/fuel group. |
 
 ## Example prompts (natural language)
@@ -96,6 +97,17 @@ Then add the MCP JSON block above (or export `EIA_API_KEY` for a one-off termina
 | `Coal open-market price in the Powder River Basin, annual from 2020 through 2023` | `coal + powder_river + annual` |
 | `WTI spot crude oil price monthly for 2023` | `crude_oil + wti + monthly` |
 | `Brent crude spot price daily in January 2024` | `crude_oil + brent + daily` |
+
+`get_steo_forecast` returns STEO **historical actuals + forecast**:
+
+| Example prompt | What you’ll get |
+|---|---|
+| `natural_gas_price forecast by month for the next 18 months` | `natural_gas_price + monthly` |
+| `crude_oil_price forecast by quarter for the next 18 months` | `crude_oil_price + quarterly` |
+| `electricity_demand forecast by month for the next 18 months` | `electricity_demand + monthly` |
+| `natural_gas_price forecast by quarter` | `natural_gas_price + quarterly` |
+
+STEO `series` keys: `natural_gas_price`, `crude_oil_price`, `electricity_demand`; `frequency` is `monthly` or `quarterly`.
 
 **Plant IDs** must be `STATE-plantid` (e.g. `OH-3470`), not a bare numeric code.
 

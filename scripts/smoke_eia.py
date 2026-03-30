@@ -46,6 +46,7 @@ def main() -> None:
     from mcp_server_eia.tools.prices import get_electricity_prices_impl
     from mcp_server_eia.tools.projections import get_aeo_projections_impl
     from mcp_server_eia.tools.emissions import get_state_co2_emissions_impl
+    from mcp_server_eia.tools.steo import get_steo_forecast_impl
 
     print("search_power_plants …")
     r_search = search_power_plants_impl(fuel_type="gas", state="TX", limit=3)
@@ -159,6 +160,10 @@ def main() -> None:
         end_year=2023,
     )
     _assert_data("get_fuel_prices WTI", r_fuel_wti, min_count=1)
+
+    print("get_steo_forecast (natural_gas_price monthly) …")
+    r_steo = get_steo_forecast_impl(series="natural_gas_price", frequency="monthly")
+    _assert_data("get_steo_forecast natural_gas_price monthly", r_steo, min_count=2)
 
     print("OK — all smoke checks passed.")
 
