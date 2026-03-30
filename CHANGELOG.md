@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [0.3.0]: https://github.com/abrose1/mcp-server-eia/releases/tag/v0.3.0
 
+## [0.4.0] — 2026-03-30
+
+### Added
+
+- `get_steo_forecast` — STEO (Short-Term Energy Outlook) 18-month forecasts with historical actuals. Parameters: `series` and `frequency` (monthly or quarterly).
+
+### Changed / Fixed
+
+- Hardened STEO seriesId resolver to reduce incorrect `seriesId` matches (e.g. `electricity_demand`).
+- Clarified `server.py` tool descriptions to improve MCP tool selection for short-term forecasts.
+
+[0.4.0]: https://github.com/abrose1/mcp-server-eia/releases/tag/v0.4.0
+
 ## [0.2.0] — 2026-03-30
 
 ### Added
