@@ -4,15 +4,21 @@
 
 Give any AI agent structured access to U.S. energy data from the [Energy Information Administration](https://www.eia.gov/) (EIA Open Data API v2).
 
-This repo is the standalone MCP server described in the Burnout / StrandedAssets monorepo spec `eia-mcp-server-plan.md`. It is **not** the dashboard app: no Postgres, no stranded-asset model — live EIA calls only.
+**Scope:** stateless **live** calls to the EIA API only — no database, no hosted projections. Tools return a consistent `{ "data", "meta" }` shape so agents can rely on stable fields.
 
-## API key (every user, including you)
+## Prerequisites
 
-1. Register a **free** key: [EIA Open Data registration](https://www.eia.gov/opendata/register.php).
-2. **Recommended:** set `EIA_API_KEY` in your **MCP client config** for this server (see below). That keeps the key out of the repo, works the same for you and for anyone else who clones the project, and each person uses **their own** key on **their** machine.
-3. **Optional:** for manual runs in a terminal, `export EIA_API_KEY=...` before `python -m mcp_server_eia`.
+- **Python 3.11+** (see `requires-python` in `pyproject.toml`)
+- A free **EIA API key** (below)
+- An MCP client that supports **stdio** (Cursor, Claude Desktop, etc.)
 
-Do **not** commit keys. Do **not** put secrets in `.venv` (that directory is only for Python packages).
+## API key
+
+1. Register: [EIA Open Data registration](https://www.eia.gov/opendata/register.php).
+2. **Recommended:** set `EIA_API_KEY` in the **MCP server `env`** (see below). Keys stay out of the repo; each machine uses its own key.
+3. **Optional:** for a terminal, `export EIA_API_KEY=...` before `python -m mcp_server_eia`.
+
+Do **not** commit API keys or paste them into issues/PRs.
 
 ### Cursor / Claude Desktop / any stdio MCP host
 
@@ -34,10 +40,9 @@ Point the client at this repo’s Python module and pass **your** key in `env`:
 ```
 
 - **`cwd`** must be the folder where you cloned `mcp-server-eia` (so imports resolve after `pip install -e .`).
-- Replace the key value with yours; other users replace it with theirs.
 - Optional: add `"EIA_AEO_RELEASE": "2025"` to `env` if you need a different AEO release path than the default.
 
-Cursor: MCP settings UI or the JSON config file your version uses. Claude Desktop: `claude_desktop_config.json` on macOS under Application Support.
+**Where to edit config:** Cursor — MCP settings (UI or JSON, depending on version). **Claude Desktop — macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`. **Windows:** `%APPDATA%\Claude\claude_desktop_config.json` (path may vary slightly by version).
 
 ## Why not call the EIA API directly?
 
@@ -49,12 +54,21 @@ Cursor: MCP settings UI or the JSON config file your version uses. Claude Deskto
 ## Quick start (install)
 
 ```bash
+git clone https://github.com/abrose1/mcp-server-eia.git
 cd mcp-server-eia
-python3 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 ```
 
-Then add the MCP block above (or export `EIA_API_KEY` for a one-off terminal run).
+Then add the MCP JSON block above (or export `EIA_API_KEY` for a one-off terminal run).
+
+### Troubleshooting
+
+| Issue | What to check |
+|-------|----------------|
+| Import / module errors | **`cwd`** in MCP config must be the repo root (where `pyproject.toml` lives). Re-run `pip install -e ".[dev]"` in that environment. |
+| `401` / invalid key | Key typo, or key not passed in `env` / shell. |
+| Slow calls or `429` | EIA rate-limits heavy use; back off and retry. This server retries transient errors; sustained 429s need a pause or fewer parallel tools. |
 
 ## Tools (v1)
 
@@ -85,15 +99,15 @@ export EIA_API_KEY=your-key
 python scripts/smoke_eia.py
 ```
 
-This hits the real EIA API (tens of seconds), checks **two different plants** for `get_plant_operations`, and exercises every tool. Use it before releases or after changing EIA integration code. CI does **not** run this by default (no shared secret).
+This hits the real EIA API (tens of seconds), checks **two different plants** for `get_plant_operations`, and exercises every tool. Use before releases or after changing EIA integration code. **CI** runs unit tests only; smoke needs `EIA_API_KEY` locally.
 
-## Repository
+## Contributing
 
-**https://github.com/abrose1/mcp-server-eia** — releases are tagged (e.g. `v0.1.0`); see [CHANGELOG.md](CHANGELOG.md).
+Issues and PRs welcome. Run **`pytest`**, **`ruff check src tests`**, and (if you touch EIA calls) **`python scripts/smoke_eia.py`** with your key before submitting.
 
-## Related
+## Releases
 
-- Burnout / StrandedAssets — stranded-asset dashboard (same EIA ingestion patterns; different product).
+See [CHANGELOG.md](CHANGELOG.md) and [tags](https://github.com/abrose1/mcp-server-eia/tags) on GitHub.
 
 ## License
 
